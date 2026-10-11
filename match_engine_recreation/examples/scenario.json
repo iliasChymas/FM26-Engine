@@ -1,0 +1,23 @@
+{
+  "seed": 7,
+  "seconds": 900,
+  "home": {
+    "name": "Alpha",
+    "base_id": 100,
+    "formation": "4-3-3",
+    "tactics": {
+      "mentality": 0.6,
+      "pressing": 0.8,
+      "tempo": 0.6
+    }
+  },
+  "away": {
+    "name": "Beta",
+    "base_id": 200,
+    "formation": "4-2-3-1",
+    "tactics": {
+      "directness": 0.2,
+      "mentality": 0.55
+    }
+  }
+}

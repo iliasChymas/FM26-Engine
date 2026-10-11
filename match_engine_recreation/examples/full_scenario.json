@@ -1,0 +1,74 @@
+{
+  "seed": 26,
+  "seconds": 5400,
+  "home": {
+    "name": "Evidence FC",
+    "base_id": 1000,
+    "formation": "4-3-3",
+    "tactics": {
+      "tactical_style": "GEGENPRESS",
+      "mentality": 0.62,
+      "pressing": 0.78,
+      "directness": 0.42,
+      "tempo": 0.71,
+      "width": 0.64,
+      "defensive-line": 0.68,
+      "instructions": {
+        "PassingVerticality": "standard",
+        "AttackingTransition": "counter",
+        "DefensiveTransition": "counterpress",
+        "LineOfEngagement": "high",
+        "Tackling": "stay_on_feet",
+        "BuildUpStrategy": "bypass_press",
+        "PressingTrap": "out"
+      }
+    },
+    "players": [
+      {"id": 1001, "name": "Evidence GK", "role": "GK", "position": "GK", "passing": 0.70, "finishing": 0.08, "tackling": 0.36, "decisions": 0.70, "pace": 0.43, "stamina": 0.78, "goalkeeping": 0.84, "out_of_possession_role": "OPGoalkeeper"},
+      {"id": 1002, "name": "Evidence RB", "role": "FB", "position": "RB", "passing": 0.69, "finishing": 0.30, "tackling": 0.74, "decisions": 0.67, "pace": 0.82, "stamina": 0.88, "in_possession_role": "overlap", "out_of_possession_role": "OPPressingFullBack"},
+      {"id": 1003, "name": "Evidence RCB", "role": "CB", "position": "RCB", "passing": 0.65, "finishing": 0.16, "tackling": 0.83, "decisions": 0.75, "pace": 0.61, "stamina": 0.86, "out_of_possession_role": "OPCentreBack"},
+      {"id": 1004, "name": "Evidence LCB", "role": "CB", "position": "LCB", "passing": 0.72, "finishing": 0.15, "tackling": 0.81, "decisions": 0.78, "pace": 0.59, "stamina": 0.86, "out_of_possession_role": "OPCoveringCentreBack"},
+      {"id": 1005, "name": "Evidence LB", "role": "FB", "position": "LB", "passing": 0.71, "finishing": 0.28, "tackling": 0.72, "decisions": 0.66, "pace": 0.80, "stamina": 0.87, "in_possession_role": "overlap", "out_of_possession_role": "OPPressingFullBack"},
+      {"id": 1006, "name": "Evidence DM", "role": "DM", "position": "DM", "passing": 0.78, "finishing": 0.25, "tackling": 0.79, "decisions": 0.84, "pace": 0.58, "stamina": 0.90, "in_possession_role": "hold", "out_of_possession_role": "OPScreeningDefensiveMidfielder"},
+      {"id": 1007, "name": "Evidence CM1", "role": "CM", "position": "RCM", "passing": 0.81, "finishing": 0.44, "tackling": 0.65, "decisions": 0.82, "pace": 0.69, "stamina": 0.91, "in_possession_role": "roam", "out_of_possession_role": "OPPressingCentralMidfielder"},
+      {"id": 1008, "name": "Evidence CM2", "role": "CM", "position": "LCM", "passing": 0.76, "finishing": 0.51, "tackling": 0.67, "decisions": 0.79, "pace": 0.72, "stamina": 0.90, "in_possession_role": "support", "out_of_possession_role": "OPCentralMidfielder"},
+      {"id": 1009, "name": "Evidence RW", "role": "W", "position": "RW", "passing": 0.73, "finishing": 0.72, "tackling": 0.38, "decisions": 0.70, "pace": 0.91, "stamina": 0.84, "in_possession_role": "inside_forward", "out_of_possession_role": "OPTrackingWinger"},
+      {"id": 1010, "name": "Evidence LW", "role": "W", "position": "LW", "passing": 0.75, "finishing": 0.75, "tackling": 0.35, "decisions": 0.73, "pace": 0.89, "stamina": 0.85, "in_possession_role": "inside_forward", "out_of_possession_role": "OPTrackingWinger"},
+      {"id": 1011, "name": "Evidence ST", "role": "ST", "position": "ST", "passing": 0.61, "finishing": 0.86, "tackling": 0.29, "decisions": 0.72, "pace": 0.83, "stamina": 0.82, "in_possession_role": "pressing_forward", "out_of_possession_role": "OPTrackingCentreForward"}
+    ]
+  },
+  "away": {
+    "name": "Control FC",
+    "base_id": 2000,
+    "formation": "4-2-3-1",
+    "tactics": {
+      "tactical_style": "CONTROL_POSSESSION",
+      "mentality": 0.52,
+      "pressing": 0.53,
+      "directness": 0.28,
+      "tempo": 0.44,
+      "width": 0.55,
+      "defensive-line": 0.51,
+      "instructions": {
+        "PassingStyle": "shorter",
+        "Patience": "work_ball_into_box",
+        "GoalKicks": "short",
+        "PressingTrap": "in",
+        "DefensiveTransition": "regroup"
+      }
+    },
+    "players": [
+      {"id": 2001, "name": "Control GK", "role": "GK", "position": "GK", "passing": 0.78, "finishing": 0.07, "tackling": 0.35, "decisions": 0.76, "pace": 0.40, "stamina": 0.78, "goalkeeping": 0.82},
+      {"id": 2002, "name": "Control RB", "role": "FB", "position": "RB", "passing": 0.75, "finishing": 0.26, "tackling": 0.73, "decisions": 0.74, "pace": 0.75, "stamina": 0.86},
+      {"id": 2003, "name": "Control RCB", "role": "CB", "position": "RCB", "passing": 0.72, "finishing": 0.12, "tackling": 0.82, "decisions": 0.77, "pace": 0.55, "stamina": 0.85},
+      {"id": 2004, "name": "Control LCB", "role": "CB", "position": "LCB", "passing": 0.76, "finishing": 0.12, "tackling": 0.80, "decisions": 0.80, "pace": 0.57, "stamina": 0.85},
+      {"id": 2005, "name": "Control LB", "role": "FB", "position": "LB", "passing": 0.77, "finishing": 0.25, "tackling": 0.70, "decisions": 0.75, "pace": 0.73, "stamina": 0.86},
+      {"id": 2006, "name": "Control DM1", "role": "DM", "position": "DM", "passing": 0.84, "finishing": 0.22, "tackling": 0.76, "decisions": 0.88, "pace": 0.52, "stamina": 0.89},
+      {"id": 2007, "name": "Control DM2", "role": "DM", "position": "DM", "passing": 0.82, "finishing": 0.28, "tackling": 0.73, "decisions": 0.85, "pace": 0.54, "stamina": 0.90},
+      {"id": 2008, "name": "Control AM", "role": "AM", "position": "AM", "passing": 0.87, "finishing": 0.62, "tackling": 0.31, "decisions": 0.86, "pace": 0.68, "stamina": 0.82},
+      {"id": 2009, "name": "Control RW", "role": "W", "position": "RW", "passing": 0.79, "finishing": 0.69, "tackling": 0.35, "decisions": 0.76, "pace": 0.79, "stamina": 0.84},
+      {"id": 2010, "name": "Control LW", "role": "W", "position": "LW", "passing": 0.80, "finishing": 0.71, "tackling": 0.34, "decisions": 0.78, "pace": 0.81, "stamina": 0.84},
+      {"id": 2011, "name": "Control ST", "role": "ST", "position": "ST", "passing": 0.65, "finishing": 0.82, "tackling": 0.25, "decisions": 0.74, "pace": 0.77, "stamina": 0.80}
+    ]
+  }
+}
