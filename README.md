@@ -22,10 +22,9 @@ The implementation is a **useful test harness**, not FM26 parity. Its tactical
 coefficients and event probabilities are deliberately labelled as provisional
 until native evaluator behaviour is recovered.
 
-Run it from this directory:
+Run it from the repository root:
 
 ```bash
-cd match_engine_recreation
 PYTHONPATH=src python -m match_engine.cli --seed 26 --pretty
 PYTHONPATH=src python -m match_engine.cli --scenario examples/full_scenario.json --pretty
 PYTHONPATH=src python -m match_engine.cli --seed 7 --seconds 900 \
@@ -178,7 +177,7 @@ unknown resource integers into simulation rules.
 
 ## What we created
 
-The `match_engine_recreation` package currently contains:
+The repository currently contains:
 
 - a deterministic Python match simulator and CLI;
 - complete scenario input with players and tactical systems;
@@ -240,3 +239,267 @@ more faithful while preserving a usable CLI at every stage.
 
 This work uses the repository’s reverse-engineering workflow documented by
 [`reverse-engineer-anything`](/home/ilias/.agents/skills/reverse-engineer-anything/SKILL.md).
+
+## Learning guide: how to think about a match engine
+
+If you are new to simulation programming, imagine the match as a state machine
+that runs many small steps. Each step reads the current state and writes the
+next state. The state includes the clock, score, possession, ball location,
+player locations, fatigue, tactical instructions and pending restarts.
+
+At a high level, an action chain looks like this:
+
+```text
+team has possession
+    -> choose a useful teammate or space
+    -> choose pass, carry, cross, shot or risky action
+    -> resolve pressure and technical execution
+    -> update ball and player state
+    -> create a fact/event if the action is presentation-worthy
+```
+
+A goal is therefore usually not an independent random number. It is the end of
+a chain involving possession, positioning, chance creation, a shot and a shot
+outcome. The current Python engine models that chain approximately. The native
+investigation is trying to discover the equivalent FM26 chain and its exact
+inputs.
+
+### Football concepts used in the input
+
+- **Formation:** the initial spatial arrangement, such as `4-3-3` or
+  `4-2-3-1`. It is not the same thing as a player's role.
+- **Role and duty:** what a player is asked to do in possession and out of
+  possession, such as overlap, hold position, press or cover.
+- **Mentality:** the side's broad risk/initiative setting.
+- **Pressing:** how aggressively the team tries to recover the ball.
+- **Directness:** how quickly the team attempts to move the ball forward.
+- **Tempo:** how quickly decisions and circulation are attempted.
+- **Width:** how horizontally spread the team tries to be.
+- **Defensive line:** how high the defensive block is positioned.
+- **Condition/fatigue:** changing physical capacity during the match.
+
+These names are useful football concepts and accepted scenario fields. They are
+not proof that the native engine combines them with the same simple weights as
+our prototype.
+
+### Scenario anatomy
+
+The full example demonstrates the input shape. At the top are a seed and match
+duration. Each side has a name, formation, tactics and a player list. A player
+has a stable ID so that events can refer back to that player without relying on
+display names. Core attributes are normalized to `[0, 1]` in this project.
+
+```json
+{
+  "seed": 26,
+  "seconds": 5400,
+  "home": {
+    "name": "Evidence FC",
+    "formation": "4-3-3",
+    "tactics": {
+      "mentality": 0.62,
+      "pressing": 0.78,
+      "directness": 0.42,
+      "tempo": 0.71,
+      "width": 0.64,
+      "defensive-line": 0.68,
+      "instructions": {
+        "DefensiveTransition": "counterpress"
+      }
+    },
+    "players": [
+      {
+        "id": 1001,
+        "name": "Example striker",
+        "position": "ST",
+        "role": "ST",
+        "finishing": 0.86,
+        "decisions": 0.72,
+        "pace": 0.83,
+        "stamina": 0.82
+      }
+    ]
+  }
+}
+```
+
+The parser allows additional attributes and instruction values. Unknown values
+are preserved as scenario provenance; they are not silently converted into
+invented FM coefficients.
+
+## Learning by running experiments
+
+The most useful experiments change one thing at a time:
+
+1. Hold the seed fixed and change only pressing.
+2. Keep tactics fixed and change one player's finishing or decisions.
+3. Run many different seeds and compare distributions, not one match.
+4. Replace a full roster with a deliberately weak or strong roster.
+5. Replay the same native trace and check that unknown bytes remain unchanged.
+
+These experiments test our implementation and expose regressions. They do not
+alone prove FM26 uses the same formula; that requires native or controlled
+runtime evidence.
+
+## How the FM26 side is structured
+
+The current model of the shipped engine is:
+
+```text
+Managed FM / Unity code
+        |
+        | setup PKM bytes, teams and environment
+        v
+Small plugin playback ABI
+        |
+        | Setup, Tick, Seek, event/stop-time updates
+        v
+Native playback and manager objects
+        |
+        | references the live simulation and presentation queues
+        v
+Native MATCH state
+        |
+        | players, sides, pitch, ball, tactics, clock and PRNG
+        v
+Internal action/event/commentary candidates
+        |
+        v
+Public MatchEvent records consumed by managed playback
+```
+
+The public boundary is strong evidence. `MatchState` is `0x24` bytes,
+`MatchEvent` is `0x2c`, and `StopTimeInfo` is 8 bytes. Setup accepts flags, a
+signed user-team ID and a pointer/count span of PKM bytes. `Tick(float)`
+advances playback and returns clock/score/update counts. The event-update call
+fills a small native array and returns the number of valid records.
+
+This tells us how data crosses the boundary. It does not, by itself, explain
+how a player decides to pass or shoot.
+
+### Native state and stepping
+
+Static analysis found a native state allocation of approximately `0x14330`
+bytes. Observed regions include side/player handles, pitch/environment state,
+current time slice, status/stop fields and random state. `FUN_183e08ad0` is a
+real simulation-step path that updates both side containers, pitch/ball state
+and time. `FUN_180ae00b0` and `FUN_180ae10b0` are driver/scheduling paths for
+buffered or single-slice advancement.
+
+Ghidra names such as `FUN_183e08ad0` are generated addresses, not original
+source names. They are useful anchors, but a name alone does not prove a
+semantic interpretation.
+
+### Native random state
+
+The observed setup path initializes a 64-bit state from a 32-bit setup seed:
+
+```text
+state = seed32 * 0xa4e7735a4c957f2d
+        + 0x5851f42d4c957f2e                  (mod 2^64)
+state = state * 0x5851f42d4c957f2d + increment (mod 2^64)
+```
+
+The output then applies an xor/rotate transformation. This recurrence is
+proven for setup and a native event-candidate gate. It is not proven to drive
+every gameplay decision identically.
+
+## The event-generation investigation
+
+The central research question is how native simulation state becomes a public
+time-stamped event. The evidence currently supports this sequence:
+
+1. A simulation step changes player, ball and match state.
+2. Native transition code creates internal candidates.
+3. `FUN_1822ece40` allocates/deduplicates a 0x28-byte internal record.
+4. `FUN_182872b10` applies a random gate and selector/event-ID logic.
+5. `FUN_1828738c0` merges or filters nearby candidates using IDs, player/team
+   bytes and time differences.
+6. An unresolved adapter should convert accepted candidates into public
+   `MatchEvent` records.
+7. Managed playback consumes those records and looks up presentation data.
+
+This is why independent “one random roll per commentary line” is the wrong
+mental model. The native path has state, selectors, candidate coalescing and
+time windows. The public serializer and the exact meaning of several fields
+remain the key unresolved boundary.
+
+## Why decompilation is difficult
+
+### IL2CPP removes the original source shape
+
+FM26 is a Unity IL2CPP build. C# classes become native code, while metadata
+retains useful declarations, enums and marshalling layouts. We can often prove
+that a field is an `int` at offset `0x1c`; we usually cannot recover the
+developer's original variable name or explanatory source comment.
+
+### The native plugin is huge and indirect
+
+The match implementation is in a roughly 515 MB `game_plugin.dll` with many
+generated or stripped functions. Exported functions are often wrappers that
+call a virtual function through an object pointer. The interesting code is
+found by following object creation, vtables, callers and state-field accesses.
+
+### Ghidra output is evidence, not an oracle
+
+Ghidra may produce guessed types, unreachable-block warnings, huge functions
+and names like `FUN_182872b10`. We validate interpretations with callers,
+callees, allocation sizes, repeated offsets, strings/RTTI, managed declarations
+and runtime observations. A readable decompilation line is a clue, not proof.
+
+### Resource numbers are ambiguous
+
+FMF files are compressed resource containers. PKM files carry match setup and
+reference data. Metadata carries managed declarations. A serialized integer may
+be a UI ID, version, lookup index or gameplay coefficient. We preserve raw
+values until surrounding code establishes its meaning.
+
+## Evidence labels in the notes
+
+- **Observed ABI:** size, offset, export, wrapper copy or marshal operation
+  directly established from the shipped build.
+- **Static native evidence:** repeated field access or related calls, but no
+  complete runtime proof.
+- **Runtime evidence:** controlled execution or captured trace confirms a
+  transition.
+- **Hypothesis:** plausible interpretation that still needs corroboration.
+
+This distinction is the most important habit in reverse engineering: do not
+turn a plausible guess into a gameplay coefficient just because it produces
+nice-looking matches.
+
+## A learning path through the code
+
+1. Read `examples/full_scenario.json` to learn the input vocabulary.
+2. Read `src/match_engine/model.py` for teams, players, tactics and events.
+3. Read `src/match_engine/engine.py` and follow the clock/possession/action
+   loop.
+4. Run the CLI, change one input, and compare JSON output.
+5. Read `src/match_engine/native.py` to see exact byte records.
+6. Read `docs/NATIVE_ABI.md` for the evidence behind each field offset.
+7. Read the later entries of `docs/FINDINGS.md` for the native event path.
+
+## What is still missing
+
+We do not yet know the exact player normalization/evaluator formulas, spatial
+movement model, full tactical-to-native mapping, public 0x2c serializer, live
+use of xG/QME tables, complete playback vtable implementation, or a sufficiently
+controlled black-box native match trace.
+
+The current engine is suitable for CLI system tests, architecture work and
+regression tests. It should not be marketed as FM26 parity.
+
+## Roadmap
+
+The next work stays focused on event generation:
+
+1. Identify the concrete playback implementation behind `Tick` and event
+   updates.
+2. Follow the internal 0x28 candidate queue into the public 0x2c array.
+3. Correlate event IDs, player/team bytes, time windows and stop-time records.
+4. Recover native player/system input mappings.
+5. Replace only matching heuristic subsystems in the Python engine.
+6. Add replayable fixtures and regression tests for each recovered rule.
+
+The goal is not to guess faster. It is to become more faithful while keeping a
+usable CLI at every stage.
